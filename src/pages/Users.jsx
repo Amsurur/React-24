@@ -20,34 +20,27 @@ const style = {
   px: 4,
   pb: 3,
 };
+import * as Yup from "yup";
+import { useTranslation } from "react-i18next";
+import { useForm } from "react-hook-form";
 
+// Add this before the component
+const validationSchema = Yup.object().shape({
+  Name: Yup.string()
+    .required("Name is required")
+    .min(3, "Name must be at least 3 characters"),
+  Description: Yup.string()
+    .required("Description is required")
+    .min(5, "Description must be at least 5 characters"),
+  Images: Yup.mixed()
+    .required("Image is required")
+    .test("fileType", "Unsupported file format", (value) => {
+      return (
+        value && ["image/jpeg", "image/png", "image/jpg"].includes(value.type)
+      );
+    }),
+});
 const Users = () => {
-  const formik = useFormik({
-    initialValues: {
-      Images: "",
-      Name: "",
-      Description: "",
-    },
-    onSubmit: async (values, { resetForm }) => {
-      const formData = new FormData();
-      formData.append("name", values.Name);
-      formData.append("description", values.Description);
-
-      formData.append("Images", values.Images);
-      try {
-        await axios.post(Api, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        GetData();
-        handleClose();
-        resetForm();
-      } catch (error) {
-        console.error(error);
-      }
-      console.log(values);
-      // Here you can handle the form submission, e.g., send data to the server
-    },
-  });
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => {
     setOpen(true);
@@ -60,13 +53,29 @@ const Users = () => {
     try {
       const { data } = await axios.get(Api);
 
-      setData(data.data);
+      setData(data);
     } catch (error) {
       console.error(error);
     }
   };
-  const handleChangeFile = (event) => {
-    formik.setFieldValue("Images", event.target.files[0]);
+  const { t, i18n } = useTranslation();
+
+  // const handleChangeFile = (e) => {
+  //   formik.setFieldValue("Images", e.currentTarget.files[0]);
+  // };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const onSubmit = async (data) => {
+    try {
+      await axios.post(Api, data);
+      GetData();
+      handleClose();
+    } catch (error) {
+      console.error(error);
+    }
   };
   useEffect(() => {
     GetData();
@@ -81,29 +90,31 @@ const Users = () => {
         aria-describedby="child-modal-description"
       >
         <Box sx={{ ...style, width: 200 }}>
-          <form onSubmit={formik.handleSubmit} action="">
-            <TextField
-              value={formik.values.Name}
-              onChange={formik.handleChange}
-              variant="outlined"
-              label="Name"
-              name="Name"
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <input
+              type="text"
+              {...register("name", {
+                minLength: {
+                  value: 3,
+                  message: "Name must be at least 3 characters",
+                },
+                required: "name is Requared",
+              })}
             />
-            <TextField
-              value={formik.values.Description}
-              onChange={formik.handleChange}
-              variant="outlined"
-              label="Description"
-              name="Description"
+            {errors.name && (
+              <span style={{ color: "red" }}>{errors.name.message}</span>
+            )}
+            <input
+              type="text"
+              {...register("desc", {
+                minLength: 5,
+                required: "Desc is Requared",
+              })}
             />
-            <TextField
-              onChange={handleChangeFile}
-              type="file"
-              variant="outlined"
-              label="Image"
-              name="Images"
-            />
-            <Button type="submit">Close Child Modal</Button>
+            {errors.desc && (
+              <span style={{ color: "red" }}>{errors.desc.message}</span>
+            )}
+            <button type="submit">Add</button>
           </form>
         </Box>
       </Modal>
@@ -121,7 +132,8 @@ const Users = () => {
                 key={todo.id}
               >
                 <h1>Name: {todo.name}</h1>
-                <h5>Description: {todo.description}</h5>
+                <h5>Description: {todo.desc}</h5>
+                <h1>{todo.status ? t("Completed") : t("NotCompleted")}</h1>
               </div>
             </Link>
           );
