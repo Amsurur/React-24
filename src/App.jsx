@@ -1,44 +1,42 @@
-import React, { Suspense } from "react";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
-  createBrowserRouter,
-  createRoutesFromElements,
-  Route,
-  RouterProvider,
-} from "react-router-dom";
-import Layout from "./Layout";
-import NotFound from "./pages/NotFound";
-import Loading from "./components/Loading";
-
-// Lazy-loaded components
-const Users = React.lazy(() => import("./pages/Users"));
-const UserById = React.lazy(() => import("./pages/UserById"));
-
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/" element={<Layout />}>
-      <Route
-        index
-        element={
-          <Suspense fallback={<Loading />}>
-            <Users />
-          </Suspense>
-        }
-      />
-      <Route
-        path="user/:id"
-        element={
-          <Suspense fallback={<Loading text="Loading User..." />}>
-            <UserById />
-          </Suspense>
-        }
-      />
-      <Route path="*" element={<NotFound />} />
-    </Route>
-  )
-);
+  decrement,
+  deleteData,
+  handleAdd,
+  handleChangeValue,
+  increment,
+} from "./reducers/todoSlice";
 
 const App = () => {
-  return <RouterProvider router={router} />;
+  const { data, counter, value } = useSelector((store) => store.counter);
+  const dispatch = useDispatch();
+  console.log(value);
+
+  return (
+    <div>
+      <p>{counter}</p>
+      <button onClick={() => dispatch(increment())}>Increment</button>
+      <button onClick={() => dispatch(decrement())}>Decrement</button>
+      <input
+        value={value}
+        onChange={(e) => dispatch(handleChangeValue(e.target.value))}
+        type="text"
+      />
+      <button onClick={() => dispatch(handleAdd(value))}>add</button>
+      {data.map((item) => {
+        return (
+          <div key={item.id}>
+            <h2>{item.title}</h2>
+            <p>Completed: {item.completed ? "Yes" : "No"}</p>
+            <button onClick={() => dispatch(deleteData(item.id))}>
+              delete
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 export default App;
