@@ -1,47 +1,29 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
+import { GetData } from "../api/TodoApi";
 
-const CounterSlice = createSlice({
-  name: "counter",
+
+const TodoSlice = createSlice({
+  name: "todos",
   initialState: {
-    data: [
-      {
-        id: 1,
-        title: "Learn React",
-        completed: false,
-      },
-      {
-        id: 2,
-        title: "Learn Redux",
-        completed: true,
-      },
-    ],
-    counter: 0,
-    value: "0",
+    data: [],
+    loading: false,
+    error: false,
   },
-  reducers: {
-    increment: (state, { payload }) => {
-      state.counter += 1;
-    },
-    decrement: (state, action) => {
-      state.counter -= 1;
-    },
-    handleChangeValue: (state, { payload }) => {
-      state.value = payload;
-    },
-    handleAdd: (state, { payload }) => {
-      state.counter += +payload;
-    },
-    deleteData: (state, { payload }) => {
-      state.data = state.data.filter((e) => e.id !== payload);
-    },
+  reducers: {},
+  extraReducers: (nemon) => {
+    nemon.addCase(GetData.pending, (state, { payload }) => {
+      state.loading = true;
+    }),
+      nemon.addCase(GetData.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.data = payload;
+      }),
+      nemon.addCase(GetData.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = true;
+      });
   },
 });
-export const {
-  increment,
-  decrement,
-  handleChangeValue,
-  deleteData,
-  handleAdd,
-} = CounterSlice.actions;
 
-export default CounterSlice.reducer;
+export default TodoSlice.reducer;
