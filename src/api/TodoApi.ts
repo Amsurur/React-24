@@ -1,37 +1,56 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-export const GetData = createAsyncThunk("todos/GetData", async () => {
-  try {
-    const { data } = await axios.get(
-      "https://6697657702f3150fb66d72df.mockapi.io/users"
-    );
-    return data;
-  } catch (error) {
-    console.error(error);
-  }
-});
-
 export const TodoApi = createApi({
-  reducerPath: "todos",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "https://6697657702f3150fb66d72df.mockapi.io/",
-  }),
-  tagTypes: ["Users"],
-  endpoints: (builder) => ({
-    _GetTodo_: builder.query({
-      query: () => `users`,
-      providesTags: ["Users"],
+  reducerPath: "TodoApi",
+  baseQuery: fetchBaseQuery({ baseUrl: "http://37.27.29.18:8001/" }),
+  tagTypes: ["Todo", "TodoById"],
+  endpoints: (build) => ({
+    getTodo: build.query({
+      query: () => `api/to-dos`,
+      providesTags: ["Todo"],
     }),
-    DeleteTodo: builder.mutation({
+    getTodoById: build.query({
+      query: (id) => `api/to-dos/${id}`,
+      providesTags: ["TodoById"],
+    }),
+    addTodo: build.mutation({
+      query: (newObj) => ({
+        url: "api/to-dos",
+        method: "POST",
+        body: newObj,
+      }),
+      invalidatesTags: ["Todo"],
+    }),
+    deleteTodo: build.mutation({
       query: (id) => ({
-        url: `users/${id}`,
+        url: `api/to-dos?id=${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: ["Todo"],
+    }),
+    deleteImage: build.mutation({
+      query: (id) => ({
+        url: `api/to-dos/images/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["TodoById"],
+    }),
+    addImage: build.mutation({
+      query: ({ id, newObj }) => ({
+        url: `api/to-dos/${id}/images`,
+        method: "POST",
+        body: newObj,
+      }),
+      invalidatesTags: ["TodoById"],
     }),
   }),
 });
 
-export const { use_GetTodo_Query, useDeleteTodoMutation } = TodoApi;
+export const {
+  useGetTodoQuery,
+  useAddTodoMutation,
+  useDeleteTodoMutation,
+  useGetTodoByIdQuery,
+  useDeleteImageMutation,
+  useAddImageMutation,
+} = TodoApi;
